@@ -10,7 +10,7 @@ class VimD_Notepad {
     static __new() { ;NOTE 当脚本自动重启时自动运动
         if (this != VimD_Notepad)
             return
-        this.win := vimd.initWin("Notepad", "ahk_exe code.exe")
+        this.win := vimd.initWin("Notepad", "ahk_exe Notepad.exe")
     
         ;funCheckEscape 为了解决 mode0 时按 escape 优先处理原生功能，还是切换到 mode1
         ;返回 true 则发送按键 escape
