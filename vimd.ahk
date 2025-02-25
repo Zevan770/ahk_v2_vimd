@@ -65,10 +65,11 @@ class vimd {
     static groupKeymap := "groupString" ;分组的全局搜索时，objDo 的字段定义在 groupKeymap
     static groupStatus := false
     static groupKeyAll := "{F12}" ;NOTE 执行当前全部命令
+    /** @type {Map<String, vimd.vimdWins>} */
+    static objWin := Map() ;在 initWin里设置
 
     static __new() {
         OutputDebug(format("i#{1} {2}:{3}", A_LineFile, A_LineNumber, A_ThisFunc))
-        this.objWin := Map() ;在 initWin里设置
         ;HotIfWinActive ;TODO 关闭
     }
 
@@ -77,6 +78,7 @@ class vimd {
         ;msgbox(winName . "`n" . json.stringify(this.objWin, 4))
         if !this.objWin.has(winName)
             this.objWin[winName] := this.vimdWins(winName)
+        ; /** @type {vimd.vimdWins} */
         win := this.objWin[winName]
         ;定义 hotwin
         if (winTitle == "")
@@ -289,7 +291,7 @@ class vimd {
         str := fileread(fp)
         arr := StrSplit(rtrim(fileread(fp), "`r`n"), "`n", "`r").map(v => StrSplit(v, "\")[2])
         ;objInclude := StrSplit(rtrim(fileread(fp),"`r`n"), "`n", "`r").map(v=>)
-        if (hyf_checkNewPlugin("d:\BB\plugins\vimd\vimdInclude.ahk", [["d:\BB\plugins\vimd", "wins"
+        if (hyf_checkNewPlugin(A_WorkingDir "\vimdInclude.ahk", [[A_WorkingDir, "wins"
         ]], "vimd_")) {
             f := FileOpen(fp, "w", "utf-8-raw")
             strInclude := ""
@@ -362,8 +364,8 @@ class vimd {
             return this.currentMode
         }
 
-        getMode(i := -1) {
-            if (i == -1)
+        getMode(i := unset) {
+            if (!IsSet(i))
                 return this.currentMode
             else
                 return this.arrMode[i + 1]
@@ -476,6 +478,8 @@ class vimd {
     ;-----------------------------------do__-----------------------------------
     ;-----------------------------------tip-----------------------------------
     class vimdModes {
+        ; /** @type vimd.vimdModes */
+        win := unset
 
         __new(idx, win, modename := "") {
             this.index := idx

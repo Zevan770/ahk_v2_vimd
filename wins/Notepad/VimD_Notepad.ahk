@@ -10,7 +10,7 @@ class VimD_Notepad {
     static __new() { ;NOTE 当脚本自动重启时自动运动
         if (this != VimD_Notepad)
             return
-        this.win := vimd.initWin("Notepad", "ahk_exe notepad.exe")
+        this.win := vimd.initWin("Notepad", "ahk_exe code.exe")
     
         ;funCheckEscape 为了解决 mode0 时按 escape 优先处理原生功能，还是切换到 mode1
         ;返回 true 则发送按键 escape
@@ -39,6 +39,25 @@ class VimD_Notepad {
         this.mode1.mapkey("\2",(p*)=>msgbox(1),"msgbox 2")
         this.mode1.mapkey("\p",(p*)=>msgbox(_Notepad.getDocumentPath()),"msgbox 文档路径")
 
+        mapF11("{F11}")
+        mapF11(k0) {
+            this.mode1.setGroup(k0) ;额外增加这句
+            ;推荐简化版
+            a := [
+                ["分组a", "a"],
+                [
+                    ["注释axy", "xy"],
+                    ["注释ayx", "yx"],
+                ]
+            ]
+            this.mode1.mapGroup(format("<super>{1}", k0), ObjBindMethod(this, "dynamicAuto"), a)
+            ;原始
+            this.mode1.mapkey(format("<super>{1}{2}", k0, "b"), , "分组b", 1)
+            this.mode1.mapkey(format("<super>{1}{2}", k0, "bxy"), msgbox.bind("bxy"), "注释bxy", 2)
+            this.mode1.mapkey(format("<super>{1}{2}", k0, "bxz"), msgbox.bind("bxz"), "注释bxz", 2)
+            this.mode1.mapkey(format("<super>{1}{2}", k0, "byx"), msgbox.bind("byx"), "注释byx", 2)
+            this.mode1.mapkey(format("<super>{1}{2}", k0, "bz"), msgbox.bind("bz"), "注释bz", 2)
+        }
         ;this.win.setMode(0) ;是否默认 None 模式
     }
     
