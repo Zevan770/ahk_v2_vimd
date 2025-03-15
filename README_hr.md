@@ -21,7 +21,7 @@ AutoHotkey v2-beta 请使用 [thqby/AutoHotkey_H](https://github.com/thqby/AutoH
 2. 各软件以`exeName`区分制作插件。如果子窗口需要单独定义，则需要多次定义`setWin`，再分别定义热键，多个单按键组合，则每个按键都会由`vimd`拦截调度（比如`va`和`vb`都定义了功能，则按`v`,`a`,`b`都会被拦截，为了效率，一个按键定义一次即可，只要能拦截按键，逻辑都在 vimd 里处理），由于可能定义的功能太多，所以记录按键功能的对象，会以`this.hotwin`为`key1`，再以第一个按键作为`key2`进行二次分组。每个`objDo`都会记录
 
 3. 超级按键：
-   - 按下`keySuperVim`后，会临时切换到`mode1`（同时会记录当前模式到`modeBeforeSuper`，并标记`typeSuperVim=1`），执行一次命令或取消后会切换回`modeBeforeSuper`。
+   - 按下`superKey`后，会临时切换到`mode1`（同时会记录当前模式到`modeBeforeSuper`，并标记`typeSuperVim=1`），执行一次命令或取消后会切换回`modeBeforeSuper`。
    - 按下另一类超级键如`{F5}`，会强制生效会临时切换到`mode1`，与上面方案的差异就是这种方式执行了两个动作，缺点是这个键永远由 vimd 接管而失去其原生功能
 
 ## 智能

@@ -6,10 +6,13 @@
 
 ;按 F2 定义为 <super>，所以任意时候按键都会执行 vimd 命令
 class VimD_Notepad {
+    /**@type {VimDMode} */
+    mode1 := ""
 
     static __new() { ;NOTE 当脚本自动重启时自动运动
         if (this != VimD_Notepad)
             return
+        /**@type {VimDWin} */
         this.win := vimd.initWin("Notepad", "ahk_exe Notepad.exe")
     
         ;funCheckEscape 为了解决 mode0 时按 escape 优先处理原生功能，还是切换到 mode1
@@ -18,11 +21,11 @@ class VimD_Notepad {
         this.win.initMode(0).funCheckEscape := ObjBindMethod(this,"beforeEscape")
 
         this.mode1 := this.win.initMode(1, true, ObjBindMethod(this,"beforeKey"))
-        this.mode1.objFunDynamic.set( ;定义动态热键
+        this.mode1.objDynamicHandlers.set( ;定义动态热键
             "a", (p*)=>VimD_Notepad.dynamicAuto(),
         )
     
-        this.win.setKeySuperVim() ;按下此键后，临时强制下一按键执行 vimd 命令，默认设置为 {RControl} 键
+        this.win.SetSuperKey() ;按下此键后，临时强制下一按键执行 vimd 命令，默认设置为 {RControl} 键
     
         hotkey("F1", (p*)=>PostMessage(0x111, 2, 0,, "ahk_class Notepad"))
         ;this.mode1.setObjHotWin("ahk_class Notepad") ;设置此行，则后续定义的按键只在对应窗口生效
@@ -41,7 +44,7 @@ class VimD_Notepad {
 
         mapF11("{F11}")
         mapF11(k0) {
-            this.mode1.setGroup(k0) ;额外增加这句
+            this.mode1.DefineGroup(k0) ;额外增加这句
             ;推荐简化版
             a := [
                 ["分组a", "a"],
