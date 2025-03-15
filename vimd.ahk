@@ -1,4 +1,4 @@
-;说明：
+﻿;说明：
 ;内置两个模式 mode0(原生) 和 mode1(VimD功能)，名称定义在 arrModeName
 ;默认按键 map 见 MapDefault
 ;按 ` 从 mode1→mode0
@@ -62,6 +62,7 @@ class VimD {
     static tipLevel := 15
     static tipLevel1 := 16 ;其他辅助显示
     static debugLevel := 0 ;用于方便地显示提示信息
+    static logger := Logger.getInstance()
     static groupKeymap := "groupString" ;分组的全局搜索时，action 的字段定义在 groupKeymap
     static groupStatus := false
     static groupKeyAll := "{F12}" ;NOTE 执行当前全部命令
@@ -301,10 +302,6 @@ class VimD {
             f.close()
         }
     }
-
-
-
-
 
 }
 

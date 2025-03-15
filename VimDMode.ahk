@@ -47,9 +47,10 @@ class VimDMode {
     init(tp := 0) {
         ;OutputDebug(format("i#{1} {2}:init tp={3} start", A_LineFile,A_LineNumber,tp))
         if (tp <= 0) { ;用于在do之前先初始化一部分
-            if (this.arrKeyPressed.length && this.leaderKey2ActionMap.has(this.arrKeyPressed[1]) && this.leaderKey2ActionMap[this.arrKeyPressed[
-                1]].has("group"))
+            if (this.arrKeyPressed.length && this.leaderKey2ActionMap.has(this.arrKeyPressed[1])
+            && this.leaderKey2ActionMap[this.arrKeyPressed[1]].has("group")) {
                 this.leaderKey2ActionMap[this.arrKeyPressed[1]].delete("group")
+            }
             this.arrKeyPressed := [] ;记录每个按键
             this.arrDynamicTips := []
             VimD.groupStatus := false
@@ -96,13 +97,11 @@ class VimDMode {
             ;无视模式的按键
             if (keyMap == this.win.superKey) { ;如 {RControl}
                 this.win.EnterSuperMode(1, true)
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:{3} is superKey", A_LineFile, A_LineNumber, A_ThisFunc))
+                VimD.logger.debug(format("i#{1} {2}:{3} is superKey", A_LineFile, A_LineNumber, A_ThisFunc))
                 exit
             } else if (checkSuper && this.win.superKeys.has(keyMap)) { ;<super>
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:{3} {4} is <super>", A_LineFile, A_LineNumber, A_ThisFunc, keyMap
-                    ))
+                VimD.logger.debug(format("i#{1} {2}:{3} {4} is <super>", A_LineFile, A_LineNumber, A_ThisFunc, keyMap
+                ))
                 this.win.EnterSuperMode(2)
                 this.win.currentMode._keyIn(keyMap, byScript, false) ;NOTE 以 mode1 运行
                 exit
@@ -112,9 +111,8 @@ class VimDMode {
             ;4. 判断 onBeforeKey
             if (this.win.superModeType == 0 && isobject(this.onBeforeKey)) { ;NOTE superModeType 则不执行 onBeforeKey
                 if (this.onBeforeKey.call(keyMap) == 0) { ;返回 false，则相当于 None 模式
-                    if (VimD.debugLevel > 0)
-                        OutputDebug(format("i#{1} {2}:{3} keyMap={4} onBeforeKey false", A_LineFile, A_LineNumber,
-                            A_ThisFunc, keyMap))
+                    VimD.logger.debug(format("i#{1} {2}:{3} keyMap={4} onBeforeKey false", A_LineFile, A_LineNumber,
+                        A_ThisFunc, keyMap))
                     send(VimD.Map2Send(keyMap))
                     exit
                 }
@@ -123,9 +121,9 @@ class VimDMode {
             ;    this.AddDynamicTip(this.win.modeBeforeSuper.name)
             ;自动运行 objDynamicHandlers()
             if (this.HasOwnProp("objDynamicHandlers") && this.objDynamicHandlers.has(keyMap)) {
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:{3} {4}.objDynamicHandlers({5})", A_LineFile, A_LineNumber, A_ThisFunc,
-                        this.name, keyMap))
+                VimD.logger.debug(format("i#{1} {2}:{3} {4}.objDynamicHandlers({5})", A_LineFile, A_LineNumber,
+                    A_ThisFunc,
+                    this.name, keyMap))
                 if (this.leaderKey2ActionMap.has(keyMap))
                     this.leaderKey2ActionMap[keyMap]["dynamic"] := [] ;NOTE 每次都要清空
                 if (this.objDynamicHandlers[keyMap]()) { ;TODO 特意有返回值的，表示已执行完动作，直接结束 <2023-01-20 22:25:39> hyaray
@@ -134,14 +132,12 @@ class VimDMode {
                 }
                 ;OutputDebug(format("i#{1} {2}:{3} dynamic={4}", A_LineFile,A_LineNumber,A_ThisFunc,json.stringify(this.leaderKey2ActionMap[keyMap]["dynamic"],4)))
             } else {
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:{3} 键没有动态", A_LineFile, A_LineNumber, keyMap))
+                VimD.logger.debug(format("i#{1} {2}:{3} 键没有动态", A_LineFile, A_LineNumber, keyMap))
             }
             ;非常规功能
             if (this.actions.has(keyMap)) { ;单键功能
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:this.actions.has({3}) comment={4}", A_LineFile, A_LineNumber,
-                        keyMap, this.actions[keyMap]["comment"]))
+                VimD.logger.debug(format("i#{1} {2}:this.actions.has({3}) comment={4}", A_LineFile, A_LineNumber,
+                    keyMap, this.actions[keyMap]["comment"]))
                 if (keyMap ~= "^\d$") {
                     this.HandleCount(integer(keyMap)) ;因为要传入参数，所以单独处理
                 } else if (keyMap == "{BackSpace}") {
@@ -158,9 +154,8 @@ class VimDMode {
                 }
                 exit
             } else {
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("d#{1} {2}:this.actions.not has({3}) index={4}", A_LineFile, A_LineNumber,
-                        keyMap, this.index))
+                VimD.logger.debug(format("d#{1} {2}:this.actions.not has({3}) index={4}", A_LineFile, A_LineNumber,
+                    keyMap, this.index))
                 if (this.index == 0) {
                     send(VimD.Map2Send(keyMap))
                 } else {
@@ -178,8 +173,7 @@ class VimDMode {
         ;OutputDebug(format("i#{1} {2}:{3} keyMap={4}", A_LineFile,A_LineNumber,A_ThisFunc,keyMap))
         if (keyMap == "{BackSpace}") {
             if (!this.UpdateKeySeq().length) {
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:{3} no key", A_LineFile, A_LineNumber, A_ThisFunc))
+                VimD.logger.debug(format("i#{1} {2}:{3} no key", A_LineFile, A_LineNumber, A_ThisFunc))
                 this.init()
                 return
             } else if (this.leaderKey2ActionMap[this.arrKeyPressed[1]].has("group")) {
@@ -200,9 +194,8 @@ class VimDMode {
         switch arrMatch.length {
             case 0: ;没找到命令
                 if (this.arrKeyPressed.length == 1) { ;为第1个按键
-                    if (VimD.debugLevel > 0)
-                        OutputDebug(format("i#{1} {2}:{3} send({4})", A_LineFile, A_LineNumber, A_ThisFunc, this.arrKeyPressed[
-                            1]))
+                    VimD.logger.debug(format("i#{1} {2}:{3} send({4})", A_LineFile, A_LineNumber, A_ThisFunc, this.arrKeyPressed[
+                        1]))
                     send(this.arrKeyPressed[1])
                     this.init()
                 } else if (keyMap ~= "^[1-9]$") { ;NOTE 按了不存在的数字键，当序号使用 <2023-01-20 23:34:18> hyaray
@@ -219,9 +212,8 @@ class VimDMode {
                     this.UpdateKeySeq()
                 }
             case 1: ;单个结果
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:{3} 1 matched={4}", A_LineFile, A_LineNumber, A_ThisFunc,
-                        arrMatch[1]["comment"]))
+                VimD.logger.debug(format("i#{1} {2}:{3} 1 matched={4}", A_LineFile, A_LineNumber, A_ThisFunc,
+                    arrMatch[1]["comment"]))
                 this.init(-1)
                 this.Exec(arrMatch[1]["action"], this.win.GetCount(), arrMatch[1]["comment"])
                 this.init(1)
@@ -230,18 +222,15 @@ class VimDMode {
         }
         ;所有匹配热键(dynamic+normal)
         getMatchAction() {
-            if (VimD.debugLevel > 0)
-                OutputDebug(format("i#{1} {2}:{3}", A_LineFile, A_LineNumber, A_ThisFunc))
+            VimD.logger.debug(format("i#{1} {2}:{3}", A_LineFile, A_LineNumber, A_ThisFunc))
             ;按键未定义功能
             if (!this.leaderKey2ActionMap.has(this.arrKeyPressed[1])) {
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:{3} first key not matched", A_LineFile, A_LineNumber, A_ThisFunc))
+                VimD.logger.debug(format("i#{1} {2}:{3} first key not matched", A_LineFile, A_LineNumber, A_ThisFunc))
                 return []
             }
             ;常规情况
             if (!this.leaderKey2ActionMap[this.arrKeyPressed[1]].has("group")) {
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:{3} first key no group", A_LineFile, A_LineNumber, A_ThisFunc))
+                VimD.logger.debug(format("i#{1} {2}:{3} first key no group", A_LineFile, A_LineNumber, A_ThisFunc))
                 return _matchAction()
             }
             ;NOTE group 情况
@@ -249,9 +238,8 @@ class VimDMode {
                 case 1: ;首个按键，只显示分组功能
                     arrMatch := _matchAction(1)
                     if (arrMatch.length == 1) { ;只有1组，则直接展开下级
-                        if (VimD.debugLevel > 0)
-                            OutputDebug(format("i#{1} {2}:{3} only 1 group, groupStatus", A_LineFile, A_LineNumber,
-                                A_ThisFunc))
+                        VimD.logger.debug(format("i#{1} {2}:{3} only 1 group, groupStatus", A_LineFile, A_LineNumber,
+                            A_ThisFunc))
                         arrMatch := groupLoadGlobal(true)
                     }
                 case 2: ;第2按键
@@ -260,9 +248,8 @@ class VimDMode {
                     } else { ;搜索分组
                         arrMatch := _matchAction(2)
                         if (!arrMatch.length) { ;TODO 找不到分组，搜索全部分组下的节点
-                            if (VimD.debugLevel > 0)
-                                OutputDebug(format("i#{1} {2}:{3} group not matched", A_LineFile, A_LineNumber,
-                                    A_ThisFunc))
+                            VimD.logger.debug(format("i#{1} {2}:{3} group not matched", A_LineFile, A_LineNumber,
+                                A_ThisFunc))
                             arrMatch := groupLoadGlobal(true) ;分组下的节点仍搜不到，仍给上级处理
                             ;if (!arrMatch.length)
                             ;    this.UpdateKeySeq()
@@ -279,9 +266,8 @@ class VimDMode {
                         groupDoAll()
                     }
             }
-            if (VimD.debugLevel > 0)
-                OutputDebug(format("i#{1} {2}:{3} arrMatch={4}", A_LineFile, A_LineNumber, A_ThisFunc, json.stringify(
-                    arrMatch, 4)))
+            VimD.logger.debug(format("i#{1} {2}:{3} arrMatch={4}", A_LineFile, A_LineNumber, A_ThisFunc, json.stringify(
+                arrMatch, 4)))
             return arrMatch
             groupLoadGlobal(bAddTip := false) { ;跳过分组，直接加载全局命令
                 OutputDebug(format("i#{1} {2}:{3}", A_LineFile, A_LineNumber, A_ThisFunc))
@@ -316,16 +302,14 @@ class VimDMode {
             _matchAction(groupLevel := 0, key := "string") {
                 arrTmp := []
                 objUnique := map()
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:{3} this.sKeyPressed={4} key={5}", A_LineFile, A_LineNumber,
-                        A_ThisFunc, this.sKeyPressed, key))
+                VimD.logger.debug(format("i#{1} {2}:{3} this.sKeyPressed={4} key={5}", A_LineFile, A_LineNumber,
+                    A_ThisFunc, this.sKeyPressed, key))
                 for tp in ["dynamic", "normal"
                 ] {
                     if (!this.leaderKey2ActionMap[this.arrKeyPressed[1]].has(tp))
                         continue
-                    if (VimD.debugLevel > 0)
-                        OutputDebug(format("i#{1} {2}:{3} tp={4} {5}", A_LineFile, A_LineNumber, A_ThisFunc, tp,
-                            json.stringify(this.leaderKey2ActionMap[this.arrKeyPressed[1]][tp], 4)))
+                    VimD.logger.debug(format("i#{1} {2}:{3} tp={4} {5}", A_LineFile, A_LineNumber, A_ThisFunc, tp,
+                        json.stringify(this.leaderKey2ActionMap[this.arrKeyPressed[1]][tp], 4)))
                     for action in this.leaderKey2ActionMap[this.arrKeyPressed[1]][tp] {
                         if (key == VimD.groupKeymap && !action.has(key))
                             continue
@@ -349,9 +333,8 @@ class VimDMode {
                         }
                     }
                 }
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("i#{1} {2}:{3} arrMatch={4}", A_LineFile, A_LineNumber, A_ThisFunc, json.stringify(
-                        arrTmp, 4)))
+                VimD.logger.debug(format("i#{1} {2}:{3} arrMatch={4}", A_LineFile, A_LineNumber, A_ThisFunc, json.stringify(
+                    arrTmp, 4)))
                 return arrTmp
             }
         }
@@ -376,9 +359,8 @@ class VimDMode {
     UpdateKeySeq(k := "") {
         (k == "") ? this.arrKeyPressed.pop() : this.arrKeyPressed.push(k)
             this.sKeyPressed := "".join(this.arrKeyPressed) ;TODO 是否直接修改
-            if (VimD.debugLevel > 0)
-                OutputDebug(format("i#{1} {2}:{3} arrKeyPressed={4}", A_LineFile, A_LineNumber, A_ThisFunc, json
-                    .stringify(this.arrKeyPressed, 4)))
+            VimD.logger.debug(format("i#{1} {2}:{3} arrKeyPressed={4}", A_LineFile, A_LineNumber, A_ThisFunc, json
+                .stringify(this.arrKeyPressed, 4)))
             return this.arrKeyPressed
     }
 
@@ -609,14 +591,12 @@ class VimDMode {
             this.win.arrActionHistory.push(this.win.lastAction)
         }
         ;timeSave := A_TickCount
-        if (VimD.debugLevel > 0)
-            OutputDebug(format("d#{1} {2}:{3} count={4}", A_LineFile, A_LineNumber, A_ThisFunc, cnt))
+        VimD.logger.debug(format("d#{1} {2}:{3} count={4}", A_LineFile, A_LineNumber, A_ThisFunc, cnt))
         ;NOTE 运行
         loop (cnt) {
             this.ExecAction(varDo, true)
             if (this.win.skipRepeat) { ;运行后才知道是否 skipRepeat
-                if (VimD.debugLevel > 0)
-                    OutputDebug(format("d#{1} {2}:break", A_LineFile, A_LineNumber))
+                VimD.logger.debug(format("d#{1} {2}:break", A_LineFile, A_LineNumber))
                 break
             }
         }
@@ -810,9 +790,8 @@ class VimDMode {
     }
 
     ShowTips(arrMatch) {
-        if (VimD.debugLevel > 0)
-            OutputDebug(format("i#{1} {2}:{3} this.sKeyPressed={4}", A_LineFile, A_LineNumber, A_ThisFunc, this.sKeyPressed
-            ))
+        VimD.logger.debug(format("i#{1} {2}:{3} this.sKeyPressed={4}", A_LineFile, A_LineNumber, A_ThisFunc, this.sKeyPressed
+        ))
         strTooltip := this.objTips.has(this.sKeyPressed)
             ? format("{1}`t{2}", this.sKeyPressed, this.objTips[this.sKeyPressed])
             : this.sKeyPressed
