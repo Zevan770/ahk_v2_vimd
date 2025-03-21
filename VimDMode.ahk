@@ -381,7 +381,7 @@ class VimDMode {
             ;NOTE 定义debug的内置功能，自带 <super> 参数
             this.MapKey(format("<super>{1}{1}", this.win.keyDebug), ObjBindMethod(this, "doGlobal_Edit"),
             "【编辑】VimD_" . this.win.name)
-            this.MapKey(format("<super>{1}{2}", this.win.keyDebug, "d"), ObjBindMethod(VimD, "SetDebugLevel"),
+            this.MapKey(format("<super>{1}{2}", this.win.keyDebug, "d"), ObjBindMethod(VimD.logger, "SetDebugLevel"),
             "显示/隐藏调试信息")
             this.MapKey(format("<super>{1}{2}", this.win.keyDebug, "["), ObjBindMethod(this, "doGlobal_objFKey"),
             "查看所有功能(按首键分组)leaderKey2ActionMap")
@@ -432,7 +432,7 @@ class VimDMode {
     ;       [item2Name, item2Hot],
     ;   ]
     ;]
-    MapGroup(hotBefore, fun, arr2, sBefore := "") {
+    MapGroup(hotBefore, fun := unset, arr2 := [], sBefore := "") {
         groupName := format("{1}【{2}】", sBefore, arr2[1][1])
         if (arr2[2].length == 1) { ;只有1项子元素，则直接显示到分组上
             switch arr2[2][1].length {
@@ -594,7 +594,7 @@ class VimDMode {
         VimD.logger.debug(format("d#{1} {2}:{3} count={4}", A_LineFile, A_LineNumber, A_ThisFunc, cnt))
         ;NOTE 运行
         loop (cnt) {
-            this.ExecAction(varDo, true)
+            this.ExecFunc(varDo, true)
             if (this.win.skipRepeat) { ;运行后才知道是否 skipRepeat
                 VimD.logger.debug(format("d#{1} {2}:break", A_LineFile, A_LineNumber))
                 break
@@ -603,12 +603,12 @@ class VimDMode {
         ;tooltip(A_TickCount - timeSave,,, 9)
         ;SetTimer(tooltip.bind(,,, 9), -1000)
         if (isobject(this.onAfterDo))
-            this.ExecAction(this.onAfterDo)
+            this.ExecFunc(this.onAfterDo)
     }
 
     ;NOTE 这里不能初始化 skipRepeat
     ;网址没在内
-    ExecAction(funcObj, errExit := false) {
+    ExecFunc(funcObj, errExit := false) {
         if !(funcObj is string) {
             funcObj()
             return true

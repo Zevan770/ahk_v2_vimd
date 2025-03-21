@@ -19,7 +19,7 @@ class VimDWin {
         this.count := 0
         this.skipRepeat := false ;无视count
         this.isRepeat := false
-        this.skipRepeat := "" ;获取 tooltip 的坐标
+        ; this.skipRepeat := "" ;获取 tooltip 的坐标
         ;event(部分事件在 VimDWin 部分事件在 VimDMode)
         this.onBeforeChangeMode := ""
         this.onAfterChangeMode := ""

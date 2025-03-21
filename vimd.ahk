@@ -62,7 +62,8 @@ class VimD {
     static tipLevel := 15
     static tipLevel1 := 16 ;其他辅助显示
     static debugLevel := 0 ;用于方便地显示提示信息
-    static logger := Logger.getInstance()
+    /** @type {Logger} */
+    static logger := Logger()
     static groupKeymap := "groupString" ;分组的全局搜索时，action 的字段定义在 groupKeymap
     static groupStatus := false
     static groupKeyAll := "{F12}" ;NOTE 执行当前全部命令
@@ -71,6 +72,8 @@ class VimD {
 
     static __new() {
         OutputDebug(format("i#{1} {2}:{3}", A_LineFile, A_LineNumber, A_ThisFunc))
+        ; this.logger.is_use_editor := true
+        ; this.logger.level := this.logger.level_trace
         ;HotIfWinActive ;TODO 关闭
     }
 
@@ -111,10 +114,7 @@ class VimD {
     }
 
     static SetDebugLevel() {
-        VimD.debugLevel := !VimD.debugLevel
-        status := VimD.debugLevel ? "显示" : "隐藏"
-        tooltip(format("【{1}】调试信息", status))
-        SetTimer(tooltip, -1000)
+        VimD.logger.setLogLevel(VimD.logger.debugLevel = LogLevel.DEBUG ? LogLevel.INFO : LogLevel.DEBUG)
     }
     static HideTips1() => tooltip(, , , VimD.tipLevel1)
     static ShowTips1(str, x := 0, y := 0) => tooltip(str, x, y, VimD.tipLevel1) ;辅助显示，固定在某区域
@@ -176,6 +176,10 @@ class VimD {
     ;单字符
     ;   CapsLock则转换大小写
     ;   其他不处理
+    /**
+     * @param {String} ThisHotkey
+     * @returns {String}
+     */
     static Hot2Map(ThisHotkey) {
         keyMap := ThisHotkey
         if (keyMap ~= "[+!#^].") { ;带修饰键

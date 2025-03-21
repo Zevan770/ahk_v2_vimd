@@ -53,7 +53,7 @@ class VimD_Notepad {
                     ["注释ayx", "yx"],
                 ]
             ]
-            this.mode1.mapGroup(format("<super>{1}", k0), ObjBindMethod(this, "dynamicAuto"), a)
+            this.mode1.mapGroup(format("<super>{1}", k0), , a)
             ;原始
             this.mode1.mapkey(format("<super>{1}{2}", k0, "b"), , "分组b", 1)
             this.mode1.mapkey(format("<super>{1}{2}", k0, "bxy"), msgbox.bind("bxy"), "注释bxy", 2)
@@ -71,7 +71,7 @@ class VimD_Notepad {
     }
 
     static dynamicAuto() {
-        if (ControlGetText("Edit1", "A") == "") {
+        if (ControlGetText("RichEditD2DPT1", "A") == "") {
             this.mode1.mapDynamic("a1", (p*) => msgbox("空1"), "空1")
             this.mode1.mapDynamic("a2", (p*) => msgbox("空2"), "空2")
         } else {
