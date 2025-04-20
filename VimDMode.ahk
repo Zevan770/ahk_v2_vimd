@@ -131,19 +131,7 @@ class VimDMode {
 
             if (this.win.keyToMode0 != "")
                 this.MapKey(this.win.keyToMode0, ObjBindMethod(this.win, "SwitchMode", 0), "进入 mode0")
-            ; ;NOTE 定义debug的内置功能，自带 <super> 参数
-            ; this.MapKey(format("<super>{1}{1}", this.win.keyDebug), ObjBindMethod(this, "GlobalActionEdit"),
-            ; "【编辑】VimD_" . this.win.name)
-            ; this.MapKey(format("<super>{1}{2}", this.win.keyDebug, "d"), ObjBindMethod(VimD.logger, "SetDebugLevel"),
-            ; "显示/隐藏调试信息")
-            ; this.MapKey(format("<super>{1}{2}", this.win.keyDebug, "["), ObjBindMethod(this, "GlobalActionobjFKey"),
-            ; "查看所有功能(按首键分组)leaderKey2ActionMap")
-            ; this.MapKey(format("<super>{1}{2}", this.win.keyDebug, "]"), ObjBindMethod(this, "GlobalActionobjKeysmap"),
-            ; "查看所有功能(按keymap分组)actions")
-            ; this.MapKey(format("<super>{1}{2}", this.win.keyDebug, "k"), ObjBindMethod(this,
-            ;     "GlobalActionDebug_objSingleKey"), "查看所有拦截的按键 registeredHotkeys")
-            ; this.MapKey(format("<super>{1}{2}", this.win.keyDebug, "/"), ObjBindMethod(this,
-            ;     "GlobalActionDebug_arrHistory"), "查看运行历史 arrActionHistory")
+
             n := 0 ;二进制的位数<super>(从右开始)
             if ((opt & 2 ** n) >> n) ;也可以用 "10" 这种字符串来判断
                 this.MapCount()
@@ -170,40 +158,48 @@ class VimDMode {
     }
 
     /**
-     * @description 把定义打包为 action
+     * @description 把定义打包为 action 并 map
      * @param {String} lhs
      * @param {String|Func} rhs
      * @param {String} desc
      * @param {Func} condition
+     * @param {ActionType} type
      */
-    _Map(lhs, rhs := unset, desc := unset, condition := unset, type := "normal") {
+    _Map(lhs, rhs := "", desc := "", condition := "", type := "normal") {
         /** @type  {VimDkeySequence} */
         keySeq := VimDkeySequence.Lhs2KeySeq(lhs)
         /** @type {VimDAction} */
         action := VimDAction()
         action.keySeq := keySeq
         action.rhs := rhs
+        action.type := rhs ? "normal" : "leader"
         action.desc := IsSet(desc) ? desc : rhs
         action.type := type
         action.mode := this
+        action.condition := condition
 
         leaderKeys := keySeq.GetLeaderKeys()
+        ; 自动为 leaderKeys 定义一个空的 action
         if (!this.actions.has(leaderKeys.ToString()) && leaderKeys.keys.length) {
-            this._Map(leaderKeys.ToString(), "", "", , "normal")
+            this._Map(leaderKeys.ToString(), "", leaderKeys.ToString(), , "leader")
         }
+
+        ; VimD.logger.debug(Objs2Str(action))
 
         for key in action.keySeq.keys {
             if (!this.win.registeredHotkeys.has(key)) { ;单键避免重复定义
                 HotIf(ObjBindMethod(this, "HotIfCondition", , condition?))
-                Hotkey(key, ObjBindMethod(this.win, "keyIn")) ;NOTE 相关的键全部拦截，用 VimD 控制
+                Hotkey(key, ObjBindMethod(this.win, "keyIn"))
                 this.win.registeredHotkeys.Push(key)
             }
         }
+
         this.actions[keySeq.ToString()] := action
     }
 
     ;-----------------------------------do__-----------------------------------
     BeforeKey(p*) => !CaretGetPos() ;有些软件要用 UIA.GetFocusedElement().CurrentControlType != UIA.ControlType.Edit
+    BeforeKeyUIA(p*) => UIA.GetFocusedElement().CurrentControlType != UIA.ControlType
 
     ;最终执行的命令
     ;因为 GlobalActionRepeat 调用，所以把 cnt 放参数
@@ -282,72 +278,11 @@ class VimDMode {
         ; }
         ;TODO
     }
-    ; GlobalActionEdit() {
-    ;     SplitPath(A_LineFile, , &dn)
-    ;     if (this.win.HasOwnProp("funEditSearch")) { ;TODO 增加方法来传入定位信息
-    ;         sSearch := this.win.funEditSearch()
-    ;         VimD.logger.debug(format("i#{1} {2}:title={3}", A_LineFile, A_LineNumber, sSearch))
-    ;         _c.e(format("{1}\wins\{2}\VimD_{2}.ahk", dn, this.win.name), sSearch)
-    ;     } else {
-    ;         VimD.logger.debug(format("i#{1} {2}", A_LineFile, A_LineNumber))
-    ;         _c.e(format("{1}\wins\{2}\VimD_{2}.ahk", dn, this.win.name))
-    ;     }
-    ; }
     GlobalActionRepeat() {
         this.win.isRepeating := true
         this.Exec(this.win.lastAction.rhs, this.win.lastCount)
         this.win.isRepeating := false
     }
-    GlobalActionobjKeysMap() {
-        ;msgbox(this.name . "`n" . this.index)
-        res := ""
-        for keySeq, action in this.actions
-            res .= format("{1}`t{2}`t{3}`t{4}`n", keySeq, action.mode.win, action.desc)
-        msgbox(res, , 0x40000)
-    }
-    GlobalActionobjFKey(key := "") {
-        ; arr2 := []
-        ; ;尝试获取key
-        ; if (key == "") {
-        ;     oInput := inputbox("首键")
-        ;     if (oInput.result != "Cancel" && oInput.value != "")
-        ;         key := oInput.value
-        ; }
-        ; if (key == "") {
-        ;     for _, obj in this.leaderKey2ActionMap
-        ;         getStr(obj, _)
-        ; } else {
-        ;     getStr(this.leaderKey2ActionMap[key], key)
-        ; }
-        ; hyf_GuiListView(arr2, ["标题", "模式", "首键", "所有键", "描述", "其他"
-        ; ])
-        ; getStr(obj, k0 := "") {
-        ;     for type in ["dynamic", "normal"
-        ;     ] {
-        ;         if (!obj.has(tp))
-        ;             continue
-        ;         for action in obj[tp] {
-        ;             arr2.push([action["hotwin"], tp, k0, action["string"], action.desc
-        ;             ])
-        ;         }
-        ;     }
-        ; }
-    }
-    GlobalActionDebug_objSingleKey() {
-        res := ""
-        for winTitle, obj in this.win.registeredHotkeys {
-            for k, arr in obj
-                res .= format("{1}:{2}`n", winTitle, k)
-        }
-        msgbox(res, , 0x40000)
-    }
-    GlobalActionDebug_arrHistory() {
-        res := ""
-        for arr in this.win.arrActionHistory
-            res .= format("{1}, {2}`n", arr[3], arr[2])
-        msgbox(res, , 0x40000)
-    }
-
     ;-----------------------------------tip-----------------------------------
 
     ShowTips(arrMatch) {
@@ -384,10 +319,12 @@ class VimDMode {
 
     Active() {
         if (this.win.curMode.name != this.name) {
+            VimD.logger.debug(Format("curMode {1} != {2}", this.win.curMode.name, this.name))
             return false
         }
-        if (this.onBeforeKey != "") {
+        if (this.onBeforeKey IS Func) {
             if (!this.onBeforeKey.call()) {
+                VimD.logger.debug("onBeforeKey condition failed")
                 return false
             }
         }
@@ -403,7 +340,6 @@ class VimDMode {
                 return true
             }
         }
-        VimD.logger.debug("HotIfCondition false")
         return false
 
     }
@@ -417,12 +353,15 @@ class VimDAction {
     mode := ""
 
     /**
-     * @type {String}
+     * @typedef {("normal"|"leader")} ActionType 映射类型
      */
-    type := ""
 
     /**
-     * 		
+     * @type {ActionType}
+     */
+    type := "normal"
+
+    /**
      * @description 
      * @type {VimDkeySequence} 
      */
@@ -445,6 +384,12 @@ class VimDAction {
      * @type {Map<String, VimDAction>}
      */
     mapping := Map()
+
+    /**
+     * @description 条件
+     * @type {Func}
+     */
+    condition := ""
 
     /**
      * @description 简短描述
@@ -531,19 +476,5 @@ class KeyUtil {
             return StrUpper(substr(hot, -1))
         }
         return hot
-    }
-}
-
-class Utils {
-    static icons := {
-        "left": "←",
-        "right": "→",
-        "up": "↑",
-        "down": "↓",
-        "space": "␣",
-        "enter": "↵",
-        "tab": "⇥",
-        "backspace": "⌫",
-        "delete": "⌦",
     }
 }

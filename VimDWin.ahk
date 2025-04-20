@@ -129,7 +129,12 @@ class VimDWin {
     }
 
     Active() {
-        return WinActive(this.winTitle, , this.noWinTitle)
+        if (WinActive(this.winTitle, , this.noWinTitle)) {
+            return true
+        } else {
+            VimD.logger.debug(format("winTitle={1}, noWinTitle={2} not active", this.winTitle, this.noWinTitle))
+            return false
+        }
     }
 
 }

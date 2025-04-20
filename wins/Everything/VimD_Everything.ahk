@@ -1,47 +1,47 @@
 ﻿vimd_Everything.init()
 class vimd_Everything extends _ET {
 
+    /** @type {VimDWin} */
+    win := ""
+
     static init() {
         this.win := vimd.initWin("Everything", "ahk_exe Everything.exe")
-        this.win.keyToMode1 := ""
+        this.win.keyToMode1 := "{}"
 
-        this.mode1 := this.win.initMode(1, , true)
-        this.mode1.objTips.set()
+        /** @type {VimDMode} */
+        mode1 := this.win.initMode(1, , "normal", 3)
+        mode1.MapKey("e", MsgBox.Bind("typed e"), "msgbox")
 
-        this.mode1.setDynamics([
-            "F1",
-        ], this)
+        ; mode1.mapkey("\l", (p*) => _c.e(A_ScriptDir . "\lib\Everything.ahk"), "编辑lib\Everything.ahk")
+        ; mode1.MapKey("b", (p*) => vimd_Everything.compare(), "比较")
 
-        ; this.mode1.mapkey("\l", (p*) => _c.e(A_ScriptDir . "\lib\Everything.ahk"), "编辑lib\Everything.ahk")
-        this.mode1.mapkey("b", (p*) => vimd_Everything.compare(), "比较")
+        ; mapF5("{F5}")
+        ; mapF5(k0) {
+        ;     this.mode1.mapkey(format("<super>{1}{1}", k0), (p*) => ControlChooseString("所有", "ComboBox1"), "显示-所有")
+        ;     this.mode1.mapkey(format("<super>{1}{2}", k0, "f"), (p*) => ControlChooseString("文件", "ComboBox1"), "显示-文件"
+        ;     )
+        ;     this.mode1.mapkey(format("<super>{1}{2}", k0, "d"), (p*) => ControlChooseString("文件夹", "ComboBox1"),
+        ;     "显示-文件夹")
+        ;     this.mode1.mapkey(format("<super>{1}{2}", k0, "e"), (p*) => ControlChooseString("排除列表", "ComboBox1"),
+        ;     "显示-排除列表")
+        ;     this.mode1.mapkey(format("<super>{1}{2}", k0, "i"), (p*) => send("{ctrl down}i{ctrl up}"), "大小写切换")
+        ;     this.mode1.mapkey(format("<super>{1}{2}", k0, "r"), (p*) => send("{ctrl down}r{ctrl up}"), "正则切换")
+        ;     this.mode1.mapkey(format("<super>{1}{2}", k0, "1"), (p*) => vimd_Everything.toggleIgnore(),
+        ;     "切换-启用排除列表(不推荐)")
+        ; }
 
-        mapF5("{F5}")
-        mapF5(k0) {
-            this.mode1.mapkey(format("<super>{1}{1}", k0), (p*) => ControlChooseString("所有", "ComboBox1"), "显示-所有")
-            this.mode1.mapkey(format("<super>{1}{2}", k0, "f"), (p*) => ControlChooseString("文件", "ComboBox1"), "显示-文件"
-            )
-            this.mode1.mapkey(format("<super>{1}{2}", k0, "d"), (p*) => ControlChooseString("文件夹", "ComboBox1"),
-            "显示-文件夹")
-            this.mode1.mapkey(format("<super>{1}{2}", k0, "e"), (p*) => ControlChooseString("排除列表", "ComboBox1"),
-            "显示-排除列表")
-            this.mode1.mapkey(format("<super>{1}{2}", k0, "i"), (p*) => send("{ctrl down}i{ctrl up}"), "大小写切换")
-            this.mode1.mapkey(format("<super>{1}{2}", k0, "r"), (p*) => send("{ctrl down}r{ctrl up}"), "正则切换")
-            this.mode1.mapkey(format("<super>{1}{2}", k0, "1"), (p*) => vimd_Everything.toggleIgnore(),
-            "切换-启用排除列表(不推荐)")
-        }
+        ; ;this.mode1.mapkey("e",(p*)=>_c.e(vimd_Everything.currentFilePath()),"vim打开")
+        ; this.mode1.mapkey("<super>{F3}", (p*) => run(vimd_Everything.currentFilePath()), "run")
+        ; ; this.mode1.mapkey("<super>{F4}", (p*) => _c.e(vimd_Everything.currentFilePath()), "run")
 
-        ;this.mode1.mapkey("e",(p*)=>_c.e(vimd_Everything.currentFilePath()),"vim打开")
-        this.mode1.mapkey("<super>{F3}", (p*) => run(vimd_Everything.currentFilePath()), "run")
-        ; this.mode1.mapkey("<super>{F4}", (p*) => _c.e(vimd_Everything.currentFilePath()), "run")
-
-        mapF12("{F12}")
-        mapF12(k0) {
-            this.mode1.mapkey(format("<super>{1}{1}", k0), (p*) => vimd_Everything.openOption(), "打开配置")
-            this.mode1.mapkey(format("<super>{1}{2}", k0, "k"), (p*) => vimd_Everything.openOption("常规\快捷键"), "配置-快捷键")
-            this.mode1.mapkey(format("<super>{1}{2}", k0, "i"), (p*) => vimd_Everything.openOption("索引\排除列表"),
-            "配置-排除列表")
-            this.mode1.mapkey(format("<super>{1}{2}", k0, "u"), ObjBindMethod(vimd_Everything, "update"), "更新")
-        }
+        ; mapF12("{F12}")
+        ; mapF12(k0) {
+        ;     this.mode1.mapkey(format("<super>{1}{1}", k0), (p*) => vimd_Everything.openOption(), "打开配置")
+        ;     this.mode1.mapkey(format("<super>{1}{2}", k0, "k"), (p*) => vimd_Everything.openOption("常规\快捷键"), "配置-快捷键")
+        ;     this.mode1.mapkey(format("<super>{1}{2}", k0, "i"), (p*) => vimd_Everything.openOption("索引\排除列表"),
+        ;     "配置-排除列表")
+        ;     this.mode1.mapkey(format("<super>{1}{2}", k0, "u"), ObjBindMethod(vimd_Everything, "update"), "更新")
+        ; }
 
         this.win.setMode(0)
     }
@@ -50,7 +50,7 @@ class vimd_Everything extends _ET {
         oET := _ET()
         for k, arr in oET.objAll {
             s := format("<super>{1}", k0, arr[1])
-            OutputDebug(format("i#{1} {2}:{3} s={4}", A_LineFile, A_LineNumber, A_ThisFunc, s))
+            VimD.logger.debug(format("i#{1} {2}:{3} s={4}", A_LineFile, A_LineNumber, A_ThisFunc, s))
             if (oET.objConfig.has(k))
                 this.mode1.mapDynamic(format("<super>{1}{2}", k0, arr[1]), ObjBindMethod(oET, "deleteConfig", k), "删除-" .
                 arr[2])
@@ -151,7 +151,7 @@ class _ET {
     static dll := format("d:\BB\plugins\vimd\wins\Everything\Everything{1}.dll", A_PtrSize * 8)
     static exclude :=
         "!c:\windows\ !c:\windows.old\ !\$RECYCLE.BIN\ !\.SynologyWorkingDirectory !\_FreeFileSync_\ !d:\hy\ !u:" ;!\_gsdata_\ !c:\Users\
-    ;static res := map()
+    ;static res := Map()
 
     ;fpOrFn用来运行程序
     ;funcHwndOrwinClass很多程序，还需要进一步筛选
@@ -184,7 +184,7 @@ class _ET {
         if (fnn ~= "^\d") ;数字开头不能当函数名
             fnn := "_" . fnn
         ;处理逻辑
-        ;OutputDebug(format("i#{1} {2}:ProcessExist(exeName)={3}", A_LineFile,A_LineNumber,ProcessExist(exeName)))
+        ;VimD.logger.debug(format("i#{1} {2}:ProcessExist(exeName)={3}", A_LineFile,A_LineNumber,ProcessExist(exeName)))
         if (!ProcessExist(exeName)) {
             smartRun()
         } else if (WinActive(winTitle)) {
@@ -230,7 +230,7 @@ class _ET {
             SplitPath(fp, &fn, &dir)
             if (params != "")
                 fp := format("{1} {2}", fp, params)
-            OutputDebug(format("i#{1} {2}:fp={3}", A_LineFile, A_LineNumber, fp))
+            VimD.logger.debug(format("i#{1} {2}:fp={3}", A_LineFile, A_LineNumber, fp))
             ;打开程序
             try
                 run(format('{1} /c {2}', A_ComSpec, fp), dir, "hide") ;run(fp, dir) ;TODO 尝试 <2023-04-22 23:31:11> hyaray
@@ -318,7 +318,7 @@ class _ET {
             exclude := this.exclude
         ;exclude := StrReplace(this.exclude, "!c:\windows\", "!c:\") ;不搜C:\的文档资料
         fps := this.search(filename, exclude)
-        OutputDebug(format("i#{1} {2}:fps={3}", A_LineFile, A_LineNumber, json.stringify(fps, 4)))
+        VimD.logger.debug(format("i#{1} {2}:fps={3}", A_LineFile, A_LineNumber, json.stringify(fps, 4)))
         n := fps.length
         if (n) { ;有找到
             if (n >= 1) {
@@ -406,12 +406,12 @@ class _ET {
 
     ;NOTE 返回arr
     ;获取文件夹最新的cnt个项目路径数组
-    ;tp F或D(参考loop files的标识)
+    ;type F或D(参考loop files的标识)
     ;TODO 屏蔽TC隐藏文件
-    static getNewItems(dir, cnt := 1, tp := "F", filterHide := true) {
+    static getNewItems(dir, cnt := 1, type := "F", filterHide := true) {
         obj := map("F", "file", "D", "folder")
-        tp := obj.has(tp) ? obj[tp] : "file"
-        return _ET.searchAdvanced(format('count:{1} {2}:nosubfolders:"{3}"', cnt, tp, dir), 14)
+        type := obj.has(type) ? obj[type] : "file"
+        return _ET.searchAdvanced(format('count:{1} {2}:nosubfolders:"{3}"', cnt, type, dir), 14)
     }
 
     static runc(p) { ;运行Everything
@@ -482,7 +482,7 @@ class _ET {
         ;加载Everything查询数据!c:\users因为Chromium取消
         arrSearch := ["wfn:*.exe", "wfn:*.ah1|*.ahk|*.lnk|*.txt|*.chm|*.pdf"
         ]
-        res := map()
+        res := Map()
         if !dllcall("GetModuleHandle", "str", this.dll)
             hModule := dllcall("LoadLibrary", "str", this.dll, "ptr")
         for k, v in arrSearch {
